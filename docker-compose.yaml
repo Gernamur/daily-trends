@@ -1,0 +1,43 @@
+version: "3.9"
+services:
+  api-server:
+    build: daily-trends-api-server
+    ports:
+      - 3000:3000
+    depends_on:
+      - mongodb
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DB_USER: root
+      DB_PASSWORD: example
+      DB_HOST: mongodb
+      DB_PORT: 27017
+      DB_NAME: staging-001
+  mongodb:
+    container_name: mongo
+    image: mongo
+    ports:
+      - 27017:27017
+    volumes:
+      - daily-trends-vol:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+  scrap-service:
+    build: daily-trends-scrap-service
+    depends_on:
+      - api-server
+    environment:
+      DELAY_TIME_MILLIS: 5000
+      API_SERVER_IP: api-server
+      API_SERVER_PORT: 3000
+  client:
+    build: daily-trends-client
+    restart: always
+    ports:
+      - 8080:80
+    depends_on:
+      - api-server
+volumes:
+  daily-trends-vol:
